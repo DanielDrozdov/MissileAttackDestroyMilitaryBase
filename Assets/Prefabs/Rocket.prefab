@@ -18,7 +18,7 @@ GameObject:
   - component: {fileID: 1865415046305667027}
   m_Layer: 0
   m_Name: Rocket
-  m_TagString: Untagged
+  m_TagString: Rocket
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5951,17 +5951,17 @@ ParticleSystem:
         - serializedVersion: 3
           time: 0
           value: 0
-          inSlope: 2.8543553
-          outSlope: 2.8543553
+          inSlope: 1.5393071
+          outSlope: 1.5393071
           tangentMode: 34
           weightedMode: 0
           inWeight: 0
           outWeight: 0.33333334
         - serializedVersion: 3
-          time: 0.3503418
+          time: 0.64964294
           value: 1
-          inSlope: 2.8543553
-          outSlope: 2.8543553
+          inSlope: 1.5393071
+          outSlope: 1.5393071
           tangentMode: 34
           weightedMode: 0
           inWeight: 0.33333334

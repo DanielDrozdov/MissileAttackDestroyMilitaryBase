@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class RocketMoveController : MonoBehaviour
 {
-    private bool IsRocketLaunched;
     private RocketStateController rocketStateController;
     private RocketFuelStateController rocketFuelStateController;
     private TouchPanelController touchPanelController;
+    private Transform mapCenter;
     private Rigidbody2D rb;
+    private bool IsRocketLaunched;
+    private bool IsRocketExitMapBorder;
     private float rocketMoveSpeed = 7f;
     private float rocketRotationSpeed = 2f;
 
@@ -17,16 +19,29 @@ public class RocketMoveController : MonoBehaviour
         rocketStateController = GetComponent<RocketStateController>();
         rocketFuelStateController = RocketFuelStateController.GetInstance();
         touchPanelController = TouchPanelController.GetInstance();
+        mapCenter = MapBorderState.GetInstance().transform;
     }
 
-    public void OnRocketLaunched() {
-        IsRocketLaunched = true;
+    private void OnTriggerExit2D(Collider2D collision) {
+        if(collision.CompareTag("MapBorder")) {
+            IsRocketExitMapBorder = true;
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision) {
+        if(collision.CompareTag("MapBorder")) {
+            IsRocketExitMapBorder = false;
+        }
     }
 
     private void FixedUpdate() {
         if(IsRocketLaunched) {
             if(rocketFuelStateController.HasRocketFuel() && rocketStateController.IsRocketAlive()) {
-                RotateRocket();
+                if(!IsRocketExitMapBorder) {
+                    RotateRocket(touchPanelController.moveDirection);
+                } else {
+                    RotateRocket((mapCenter.position - transform.position));
+                }
                 Move();
                 rocketFuelStateController.BurnFuel();
             } else {
@@ -37,6 +52,11 @@ public class RocketMoveController : MonoBehaviour
         } 
     }
 
+    public void OnRocketLaunched() {
+        IsRocketLaunched = true;
+        touchPanelController.moveDirection = Vector2.zero;
+    }
+
     private void Move() {
         rb.AddForce(transform.up * rocketMoveSpeed);
         float velocityX = Mathf.Clamp(rb.velocity.x, -rocketMoveSpeed, rocketMoveSpeed);
@@ -44,8 +64,8 @@ public class RocketMoveController : MonoBehaviour
         rb.velocity = new Vector2(velocityX, velocityY);
     }
 
-    private void RotateRocket() {
-        float angle = Vector2.SignedAngle(transform.up,touchPanelController.moveDirection);
+    private void RotateRocket(Vector2 moveDirection) {
+        float angle = Vector2.SignedAngle(transform.up,moveDirection);
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, 0, transform.rotation.eulerAngles.z + angle),
             rocketRotationSpeed * Time.deltaTime);
     }
