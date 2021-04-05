@@ -15,7 +15,7 @@ public class BaseLocationController : MonoBehaviour
         iconIndentValue = 1.5f;
     }
 
-    private void FixedUpdate() {
+    private void LateUpdate() {
         UpdateMetersBetweenBaseAndPlayer();
         UpdateBaseIconPos();
     }
@@ -31,6 +31,8 @@ public class BaseLocationController : MonoBehaviour
         Vector2 screenRightUpBorderPos = mainCamera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height));
         targetPos.x = Mathf.Clamp(targetPos.x, screenLeftDownBorderPos.x + iconIndentValue, screenRightUpBorderPos.x - iconIndentValue);
         targetPos.y = Mathf.Clamp(targetPos.y, screenLeftDownBorderPos.y + iconIndentValue, screenRightUpBorderPos.y - iconIndentValue);
-        transform.position = new Vector3(targetPos.x, targetPos.y,transform.position.z);
+        if(generalGuy.transform.position.x != transform.position.x || generalGuy.transform.position.y != transform.position.y) {
+            transform.position = new Vector3(targetPos.x, targetPos.y, transform.position.z);
+        }
     }
 }

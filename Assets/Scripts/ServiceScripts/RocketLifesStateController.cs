@@ -2,47 +2,68 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NewRocketLifeCreaterController : MonoBehaviour
+public class RocketLifesStateController : MonoBehaviour
 {
     [SerializeField] private Transform rocketSpawnerPoint;
     [SerializeField] private Transform generalGuyPoint;
     [SerializeField] private GameObject rocketPrefab;
-    private static NewRocketLifeCreaterController Instance;
+    private static RocketLifesStateController Instance;
     private CameraForwardController cameraForwardController;
     private Queue<GameObject> rocketsQueue;
 
-    public int lifes;
+    [SerializeField] private int lifes;
     private float cameraMoveSpeed = 10f;
     private bool IsStartAnim = true;
+    private bool IsGameOver;
+    private bool IsPlayerWin;
 
-    private NewRocketLifeCreaterController() { }
+    private RocketLifesStateController() { }
 
     private void Awake() {
         rocketsQueue = new Queue<GameObject>(lifes);
         Instance = this;
-        CreateRockets();
+        CreateRocketsInPool();
     }
 
     private void Start() {
         cameraForwardController = CameraForwardController.GetInstance();
         cameraForwardController.transform.position = new Vector3(rocketSpawnerPoint.position.x,rocketSpawnerPoint.position.y,
             cameraForwardController.transform.position.z);
-        StartCameraAnim();
+        RocketLifesPanelController.GetInstance().UpdateLifesPanel(rocketsQueue.Count);
+        StartPanelController.OnGameStarted += StartCameraAnim;
     }
 
-    public static NewRocketLifeCreaterController GetInstance() {
+    private void OnDestroy() {
+        StartPanelController.OnGameStarted -= StartCameraAnim;
+    }
+
+    public static RocketLifesStateController GetInstance() {
         return Instance;
+    }
+
+    public void OnPlayerWin() {
+        IsPlayerWin = true;
+    }
+
+    public bool GetPlayerWinState() {
+        return IsPlayerWin;
     }
 
     public void StartCameraAnim() {
         Vector3 targetPoint;
-        if(IsStartAnim) {
-            targetPoint = new Vector3(generalGuyPoint.transform.position.x, cameraForwardController.transform.position.y,
-                       cameraForwardController.transform.position.z);
-        } else {
+        if(rocketsQueue.Count <= 0) {
+            PanelsStateController.GetInstance().ActivateDiePanel();
+            IsGameOver = true;
+        }
+
+        if(!IsStartAnim && !IsGameOver) {
             targetPoint = new Vector3(rocketSpawnerPoint.position.x, rocketSpawnerPoint.position.y,
                        cameraForwardController.transform.position.z);
+        } else {
+            targetPoint = new Vector3(generalGuyPoint.transform.position.x, generalGuyPoint.transform.position.y,
+                       cameraForwardController.transform.position.z);
         }
+
         StartCoroutine(CameraAnimCoroutine(targetPoint));
     }
 
@@ -56,30 +77,31 @@ public class NewRocketLifeCreaterController : MonoBehaviour
             }
             yield return null;
         }
+
         StopCoroutine(CameraAnimCoroutine(targetPoint));
-        if(!IsStartAnim) {
-            SpawnRocket();
-        } else {
-            IsStartAnim = false;
-            StartCameraAnim();
+        if(!IsGameOver) {
+            if(!IsStartAnim) {
+                ActivateRocket();
+            } else {
+                IsStartAnim = false;
+                StartCameraAnim();
+            }
         }
     }
 
-    private void SpawnRocket() {
-        if(rocketsQueue.Count <= 0) {
-            Debug.LogError("GAME OVER");
-            return;
-        }
+    private void ActivateRocket() {
         GameObject rocket = rocketsQueue.Dequeue();
         cameraForwardController.playerTransform = rocket.transform;
         RocketFuelStateController.GetInstance().ResetFuel();
+        RocketLifesPanelController.GetInstance().UpdateLifesPanel(rocketsQueue.Count);
         rocket.SetActive(true);
     }
 
-    private void CreateRockets() {
+    private void CreateRocketsInPool() {
         for(int i = 0;i < lifes; i++) {
             GameObject newRocket = Instantiate(rocketPrefab, rocketSpawnerPoint.position,rocketPrefab.transform.rotation, transform);
             rocketsQueue.Enqueue(newRocket);
         }
     }
+
 }

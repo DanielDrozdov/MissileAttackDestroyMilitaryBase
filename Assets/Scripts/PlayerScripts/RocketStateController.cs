@@ -9,7 +9,7 @@ public class RocketStateController : MonoBehaviour
     private Rigidbody2D rb;
     private Animator animator;
     private bool IsRocketDestroy;
-    private float explosionRadius = 2f;
+    private float explosionRadius = 1.5f;
     private float explodeForce = 500f;
 
     public delegate void PlayerActions();
@@ -58,7 +58,11 @@ public class RocketStateController : MonoBehaviour
     private void Explode() {
         Collider2D[] coliders = Physics2D.OverlapCircleAll(transform.position, explosionRadius);
         for(int i = 0;i < coliders.Length;i++) {
-            if(coliders[i].CompareTag("ExplosionSprite")) {
+            if(coliders[i].CompareTag("ExplosionSprite") || coliders[i].CompareTag("GeneralGuy")) {
+                if(coliders[i].CompareTag("GeneralGuy")) {
+                    PanelsStateController.GetInstance().ActivateWinPanel();
+                    RocketLifesStateController.GetInstance().OnPlayerWin();
+                }
                 coliders[i].attachedRigidbody.bodyType = RigidbodyType2D.Dynamic;
                 Vector2 direction = (coliders[i].transform.position - transform.position).normalized;
                 coliders[i].attachedRigidbody.AddForceAtPosition(direction * explodeForce, transform.position);
@@ -70,6 +74,6 @@ public class RocketStateController : MonoBehaviour
         animator.enabled = false;
         Destroy(gameObject);
         OnPlayerDie();
-        NewRocketLifeCreaterController.GetInstance().StartCameraAnim();
+        RocketLifesStateController.GetInstance().StartCameraAnim();
     }
 }
